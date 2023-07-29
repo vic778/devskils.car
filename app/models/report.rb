@@ -30,7 +30,15 @@ class Report
     total_hours = 0
     
     data.each do |event|
-      p event
+      if event.kind == "in"
+        check_in = event.timestamp
+        check_out = data.find_by(kind: "out", timestamp: check_in..@to.end_of_day)
+        if check_out.present?
+          total_hours += ((check_out.timestamp - check_in).to_f / 3600).round(2)
+        else
+          @problematic_dates << check_in.strftime("%Y-%m-%d")
+        end
+      end
     end
 
 
