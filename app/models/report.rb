@@ -26,24 +26,28 @@ class Report
 
   def calculate_worktime_hrs
     data = query
-
     total_hours = 0
-    
-    data.each do |event|
-      if event.kind == "in"
-        check_in = event.timestamp
-        check_out = data.find_by(kind: "out", timestamp: check_in..@to.end_of_day)
-        if check_out.present?
-          total_hours += ((check_out.timestamp - check_in).to_f / 3600).round(2)
-        else
-          @problematic_dates << check_in.strftime("%Y-%m-%d")
-        end
+    @problematic_dates = []
+
+    events_by_day = data.group_by { |event| event.timestamp.to_date }
+
+    events_by_day.each do |date, events|
+      has_in = events.any? { |event| event.kind == 'in' }
+      has_out = events.any? { |event| event.kind == 'out' }
+
+      if has_in && has_out
+        in_event = events.find { |event| event.kind == 'in' }
+        out_event = events.find { |event| event.kind == 'out' }
+
+        total_hours += (out_event.timestamp - in_event.timestamp) / 3600
+      else
+        @problematic_dates << date
       end
     end
 
-
-    @worktime_hrs = total_hours.to_f
+    @worktime_hrs = total_hours.round(2)
   end
+
 
   def query
     Event.where(employee_id: @employee_id, timestamp: @from.beginning_of_day..@to.end_of_day).order(:timestamp)
