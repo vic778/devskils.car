@@ -30,15 +30,7 @@ class Report
     total_hours = 0
     
     data.each do |event|
-      if event.kind == 0
-        check_in = event.timestamp
-        check_out = data.find { |e| e.kind == 1 && e.timestamp > check_in }&.timestamp
-        if check_out
-          total_hours += (check_out - check_in) / 3600
-        else
-          @problematic_dates << check_in.strftime('%Y-%m-%d')
-        end
-      end
+      p event
     end
 
 
